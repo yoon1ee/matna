@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from flask import *
 from flask_jwt_extended import *
 from pymongo import MongoClient
@@ -15,7 +17,6 @@ def sign_up():
     if request.method == 'GET':
         return render_template("index.html")
     else:
-        # 회원정보 생성
         username = request.form.get('name_give')
         #email = request.form.get('email')
         #ordinal = request.form.get('ordinal')
@@ -40,16 +41,19 @@ def sign_up():
         to_db = {
             "useremail" : useremail,
             "username": username,
-            "password": bcrypt.hashpw(password),
+            "password": bcrypt.hashpw(
+                password.encode('UTF-8'),
+                bcrypt.gensalt()
+            )
         }
 
         to_db_signup = signup.insert_one(to_db)
         return jsonify({'result': 'success'})
 
 
-        ####### 로그인용 ##########
-        #last_signup = signup.find_one({"useremail":useremail})
-        #if bcrypt.checkpw(password)
+####### 로그인용 ##########
+#last_signup = signup.find_one({"useremail":useremail})
+#if bcrypt.checkpw(password)
 
         
 
@@ -70,34 +74,30 @@ def sign_up():
 
     #return jsonify(new_user_info)
 
-@app.route('/login', methods=['POST'])
-def login():
-    data        = request.json
-    email       = data['email']				# 2)
-    password    = data['password']			# 3)
+@app.route("/login", methods=['POST'])
+def login_proc():
+	
+	# 클라이언트로부터 요청된 값
+	username = request.form.get('name_give')
+    #email = request.form.get('email')
+    #ordinal = request.form.get('ordinal')
+    useremail = request.form.get('email_give')
+    password = request.form.get('password_give')
 
-    row = database.execute(text("""			# 4)
-        SELECT
-            id,
-            hashed_password
-        FROM users
-        WHERE email = :email
-    """), {'email' : email}).fetchone()
-
-    if row and bcrypt.checkpw(password.encode('UTF-8'),
-    row['hashed_password'].encode('UTF-8')):				# 5)
-        user_id = row['id']
-        payload = {											# 6)
-            'user_id' : user_id,
-            'exp'     : datetime.utcnow() + timedelta(seconds = 60 * 60 * 24)
-        }
-        token = jwt.encode(payload, app.config['JWT_SECRET_KEY'], 'HS256')	# 7)
-
-        return jsonify({
-            'acces_token' : token.decode('UTF-8')					# 8)
-        })
-    else:
-        return '', 401
-
+	# 아이디, 비밀번호가 일치하는 경우
+	if (useremail == admin_id and
+		password == admin_pw):
+		return jsonify(
+			result = "success",
+			# 검증된 경우, access 토큰 반환
+			access_token = create_access_token(identity = user_id,
+											expires_delta = False)
+		)
+	
+	# 아이디, 비밀번호가 일치하지 않는 경우
+	else:
+		return jsonify(
+			result = "Invalid Params!"
+		)
 if __name__ == '__main__':
     app.run('127.0.0.1', port=5000, debug=True)

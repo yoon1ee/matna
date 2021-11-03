@@ -168,7 +168,7 @@ document.querySelector(".login-button").addEventListener("click", function() {
                 // var token = response["access_token"]
                 // console.log(token)
                 // document.cookie = "token=" + token
-                // window.location.reload();
+                window.location.reload();
                 
             } else {
                 alert("아이디나 비밀번호가 틀렸습니다.")

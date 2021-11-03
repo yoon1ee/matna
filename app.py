@@ -167,11 +167,10 @@ def sign_in():
         return jsonify({ "result": "fail", "message": "INVALID_USER_INFO"}), 200
 
 
-# @app.route("/gathering_check", methods=["GET"])
-# @jwt_required
-# def gather_button():
-#     token_recieve = 
-    
+@app.route("/gathering_check", methods=["GET"])
+@jwt_required()
+def gather_button():
+    return jsonify({ "result": "success"})
 
 
 if __name__ == '__main__':

@@ -92,7 +92,7 @@ def main_listing():
     open_list = []
     close_list = []
     for restaurant in all_restaurants:
-        if "event" in restaurant:
+        if restaurant["gathering"] == "Y":
             expire_time = restaurant["event"]["expire_time"]
             tmp = datetime.strptime(expire_time, "%Y-%m-%d %H:%M")
             restaurant["event"]["expire_time"] = tmp
@@ -105,7 +105,8 @@ def main_listing():
 
     result = open_list + close_list
 
-    return jsonify({ "result" : "success", "memo" : result })
+    # return jsonify({ "result" : "success", "memo" : result })
+    return render_template("index.html", result)
 
 
 
@@ -114,7 +115,7 @@ def sign_up():
     fullname = request.form["fullname"]
     email = request.form["email"]
     password = request.form["password"]
-    hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
+    hashed_password = bcrypt.hashpw(password.encode("UTF-8"), bcrypt.gensalt()).decode("UTF-8")
 
     if db.user.count_documents({"email" : email}):
         return jsonify({ "result" : "fail", "message": "EMAIL_ALREADY_EXISTS" }), 401

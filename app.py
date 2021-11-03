@@ -168,9 +168,13 @@ def sign_in():
 
 
 @app.route("/gathering_check", methods=["GET"])
-@jwt_required()
-def gather_button():
-    return jsonify({ "result": "success"})
+@jwt_required(optional=True)
+def click_gather():
+    current_identity = get_jwt_identity()
+    if current_identity:
+        return jsonify({"result": "success"})
+    else:
+        return jsonify({"result": "fail"})
 
 
 if __name__ == '__main__':

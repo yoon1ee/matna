@@ -1,0 +1,38 @@
+.login-section {
+    position: absolute;
+    top:0;
+    right:0;
+    margin: 50px;
+}
+
+.button {
+    margin: 5px;
+}
+
+.columns {
+    margin: 0px 150px;
+}
+
+.fa-circle {
+    color: green;
+    margin-right: 10px;
+}
+
+.participants-status, .meeting-time {
+    margin-left: 50px;
+}
+
+.dropdown {
+    margin-bottom: 180px;
+}
+
+.dropdown-content {
+    max-height: 10em;
+    overflow: auto;
+  }
+
+.make-gather {
+    position: absolute;
+    bottom:0;
+    right:0;
+}

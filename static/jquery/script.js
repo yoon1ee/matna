@@ -53,7 +53,7 @@ document.querySelector(".signup-button").addEventListener("click", function() {
                 alert("회원가입 성공! 이제 로그인해주세요.");
                 window.location.reload();
             } else {
-                alert("다시 시도해주세요!")
+                alert("다시 시도해주세요!") //이미 가입된 아이디입니다. 부분 넣어야함
             }
         }
     })

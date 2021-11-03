@@ -84,6 +84,7 @@ function makeCard(restaurant_name, restaurant_photo, like_number, gathering, mee
 // Participate button behavior
 const participateButtons = document.querySelectorAll(".participate")
 //add resID and token to back
+
 $.ajax({
     type: "POST",
     url: "/participate_check",
@@ -98,6 +99,27 @@ $.ajax({
                     newButton.className = "button is-light"
                     this.parentElement.parentElement.querySelector(".card-header").appendChild(newButton)
                     oldbutton.remove()
+                })
+            }
+        } else {
+            alert("먼저 로그인을 해주세요!")
+        }
+    }
+})
+
+// Like button behavior
+const likeButtons = document.querySelectorAll(".like-button")
+//add resID and token to back
+
+$.ajax({
+    type: "POST",
+    url: "/participate_check",
+    data: {},
+    success: function(response) {
+        if (response["result"] == "success") {
+            for (let i = 0; i < likeButtons.length; i++) {
+                likeButtons[i].addEventListener("click", function() {
+                    window.location.reload();
                 })
             }
         } else {
@@ -169,6 +191,11 @@ document.querySelector(".login-button").addEventListener("click", function() {
                 // Save jwt token
                 // token = token from server
                 // document.cookie = "token=" + token
+
+                // remove login and signup buttons
+                // append logout button
+                // add event to logout button
+                    // delete token from cookie
             } else {
                 alert("아이디나 비밀번호가 틀렸습니다.")
             }
@@ -190,6 +217,7 @@ document.querySelector(".make-gather").addEventListener("click", function() {
     let numberOfParticipants_temp = document.querySelector(".participants-number").value
     let meetingTime_temp = document.querySelector(".meeting-time").value
     let restaurantId_temp = document.querySelector(".restaurant-name").value
+    //add user name to post data
 
     $.ajax({
         type: "POST",

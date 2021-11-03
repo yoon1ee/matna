@@ -7,7 +7,7 @@ from bson import json_util
 from mongoengine.base import BaseDocument
 from mongoengine.queryset.base import BaseQuerySet
 from flask_jwt_extended import (
-    JWTManager, jwt_required, create_access_token, get_jwt_identity, unset_jwt_cookies, create_refresh_token,
+    JWTManager, jwt_required, create_access_token, get_jwt_identity, unset_jwt_cookies, create_refresh_token, set_access_cookies,
 )
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -18,6 +18,16 @@ from setting import SECRET_KEY, ALGORITHM
 
 
 app = Flask(__name__)
+#jwt 매니저 활성화
+app.config.update(DEBUG=True, JWT_SECRET_KEY="thisisjwtkey")
+jwt = JWTManager(app)
+
+# JWT 쿠키 저장
+app.config['JWT_COOKIE_SECURE'] = False  # https를 통해서만 cookie가 갈 수 있는지 (production 에선 True)
+app.config['JWT_TOKEN_LOCATION'] = ['cookies']
+app.config['JWT_ACCESS_COOKIE_PATH'] = '/'  # access cookie를 보관할 url (Frontend 기준)
+
+
 
 class MongoEngineJSONEncoder(JSONEncoder):
     def default(self, obj):
@@ -32,6 +42,8 @@ app.json_encoder = MongoEngineJSONEncoder
 client = MongoClient('localhost', 27017)
 # client = MongoClient('mongodb://test:test@3.34.194.45', 27017)
 db = client.matna
+
+
 
 ##로그인 데코레이터
 @app.route("/create_event", methods=["POST"])
@@ -141,19 +153,26 @@ def sign_in():
 
     if bcrypt.checkpw(password.encode("UTF-8"), user["password"].encode("UTF-8")):
         ###
-        access_token = jwt.encode({"fullname": user["fullname"]}, SECRET_KEY, algorithm = ALGORITHM)
+        #access_token = jwt.encode({"fullname": user["fullname"]}, SECRET_KEY, algorithm = ALGORITHM)
         ###
-        return jsonify({ "result": "success", "access_token": access_token}), 200
+        access_token = create_access_token(identity=email, expires_delta=False)
 
+        resp = jsonify({"result": "success"})
+
+        set_access_cookies(resp, access_token)
+
+        return resp, 200
+        
     else:
         return jsonify({ "result": "fail", "message": "INVALID_USER_INFO"}), 200
 
 
-
-
-
-
+# @app.route("/gathering_check", methods=["GET"])
+# @jwt_required
+# def gather_button():
+#     token_recieve = 
     
+
 
 if __name__ == '__main__':
     app.run("0.0.0.0", port=5000, debug=True)

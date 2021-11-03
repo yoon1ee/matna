@@ -165,10 +165,11 @@ document.querySelector(".login-button").addEventListener("click", function() {
         success: function(response) {
             if (response["result"] == "success") {
                 alert("로그인 성공!");
-                window.location.reload();
-                // Save jwt token
-                // token = token from server
+                // var token = response["access_token"]
+                // console.log(token)
                 // document.cookie = "token=" + token
+                // window.location.reload();
+                
             } else {
                 alert("아이디나 비밀번호가 틀렸습니다.")
             }

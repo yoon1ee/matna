@@ -15,6 +15,8 @@ document.querySelectorAll(".modal-close")[1].addEventListener("click", function(
     document.querySelectorAll(".modal")[1].classList.remove("is-active")
 })
 
+var email_glo="";
+
 // Card listing behavior
 // $.ajax({
 //     type: "GET",
@@ -84,53 +86,85 @@ function makeCard(restaurant_name, restaurant_photo, like_number, gathering, mee
 // Participate button behavior
 const participateButtons = document.querySelectorAll(".participate")
 //add resID and token to back
-$.ajax({
-    type: "POST",
-    url: "/participate_check",
-    data: {},
-    success: function(response) {
-        if (response["result"] == "success") {
-            for (let i = 0; i < participateButtons.length; i++) {
-                participateButtons[i].addEventListener("click", function() {
-                    var oldbutton = this.parentElement.querySelector(".button")
-                    var newButton = document.createElement('button')
-                    newButton.textContent = "참여완료"
-                    newButton.className = "button is-light"
-                    this.parentElement.parentElement.querySelector(".card-header").appendChild(newButton)
-                    oldbutton.remove()
-                })
+
+for (let i = 0; i < participateButtons.length; i++) {
+    participateButtons[i].addEventListener("click", function() {
+        $.ajax({
+            type: "GET",
+            url: "/participate_check",
+            data: {},
+            success: function(response) {
+                if (response["result"] == "success") {
+                    for (let i = 0; i < participateButtons.length; i++) {
+                        participateButtons[i].addEventListener("click", function() {
+                            var oldbutton = this.parentElement.querySelector(".button")
+                            var newButton = document.createElement('button')
+                            newButton.textContent = "참여완료"
+                            newButton.className = "button is-light"
+                            this.parentElement.parentElement.querySelector(".card-header").appendChild(newButton)
+                            oldbutton.remove()
+                        })
+                    }
+                } else {
+                    alert("먼저 로그인을 해주세요!")
+                }
             }
-        } else {
-            alert("먼저 로그인을 해주세요!")
-        }
-    }
-})
+        })
+    })
+}
+
+// Like button behavior
+const likeButtons = document.querySelectorAll(".like-button")
+
+for (let i = 0; i < likeButtons.length; i++) {
+    likeButtons[i].addEventListener("click", function() {
+        $.ajax({
+            type: "GET",
+            url: "/like_check",
+            data: {},
+            success: function(response) {
+                if (response["result"] == "success") {
+                    
+                } else {
+                    alert("먼저 로그인을 해주세요!")
+                }
+            }
+        })
+    })
+}
+
 
 // Gather button behavior
 const gatheringButtons = document.querySelectorAll(".gather")
 
-$.ajax({
-    type: "GET",
-    url: "/gathering_check",
-    data: {},
-    success: function(response) {
-        if (response["result"] == "success") {
-            for (let i = 0; i < gatheringButtons.length; i++) {
-                gatheringButtons[i].addEventListener("click", function() {
-                    document.querySelector(".gathering-form").className += " is-active"
-                    resName = this.parentElement.parentElement.querySelector('.title').innerHTML
-                    document.querySelector(".restaurant-name").value = resName
-                })
+for (let i = 0; i < gatheringButtons.length; i++) {
+    gatheringButtons[i].addEventListener("click", function() {
+        $.ajax({
+            type: "GET",
+            url: "/api/gathering_check",
+            data: {},
+            success: function(response) {
+                if (response["result"] == "success") {
+                    for (let i = 0; i < gatheringButtons.length; i++) {
+                        gatheringButtons[i].addEventListener("click", function() {
+                            document.querySelector(".gathering-form").className += " is-active"
+                            resName = this.parentElement.parentElement.querySelector('.title').innerHTML
+                            document.querySelector(".restaurant-name").value = resName
+                        })
+                    }
+        
+                    document.querySelector(".gathering-form-close").addEventListener("click", function() {
+                        document.querySelector(".gathering-form").classList.remove("is-active")
+                    });
+                } else {
+                    alert("먼저 로그인을 해주세요!")
+                }
             }
+        })
+    })
+}
 
-            document.querySelector(".gathering-form-close").addEventListener("click", function() {
-                document.querySelector(".gathering-form").classList.remove("is-active")
-            });
-        } else {
-            alert("먼저 로그인을 해주세요!")
-        }
-    }
-})
+
 
 // Signup form behavior
 document.querySelector(".signup-button").addEventListener("click", function() {
@@ -165,6 +199,7 @@ document.querySelector(".login-button").addEventListener("click", function() {
         success: function(response) {
             if (response["result"] == "success") {
                 alert("로그인 성공!");
+                email_glo = response["email"]
                 // var token = response["access_token"]
                 // console.log(token)
                 // document.cookie = "token=" + token
@@ -195,7 +230,7 @@ document.querySelector(".make-gather").addEventListener("click", function() {
     $.ajax({
         type: "POST",
         url: "/create_event",
-        data: { restaurantId: restaurantId_temp, numberOfParticipants: numberOfParticipants_temp, meetingTime: meetingTime_temp },
+        data: { email: email_glo, restaurant: restaurantId_temp, numberOfParticipants: numberOfParticipants_temp, meetingTime: meetingTime_temp },
         success: function(response){
             if (response["result"] == "success") {
                 alert("모임이 만들어 졌습니다!");

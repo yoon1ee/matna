@@ -1,4 +1,5 @@
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, redirect
+from flask.helpers import url_for
 from pymongo import MongoClient
 from bson.json_util import dumps
 from bson.objectid import ObjectId
@@ -11,7 +12,7 @@ from flask_jwt_extended import (
 )
 
 from apscheduler.schedulers.background import BackgroundScheduler
-import datetime
+from datetime import *
 
 import bcrypt, jwt
 from setting import SECRET_KEY, ALGORITHM
@@ -40,28 +41,85 @@ class MongoEngineJSONEncoder(JSONEncoder):
 app.json_encoder = MongoEngineJSONEncoder
 
 client = MongoClient('localhost', 27017)
-# client = MongoClient('mongodb://test:test@3.34.194.45', 27017)
+#client = MongoClient('mongodb://test:test@3.34.194.45', 27017)
 db = client.matna
 
+@jwt_required(optional=True)
+def check():
+    email = get_jwt_identity()
+    #없으면 true
+    if email is None :
+        return True
 
+
+
+# @app.route("/testing", methods=["GET"])
+# @jwt_required(optional=True)
+# def click2_gather():
+#     email = get_jwt_identity()
+#     return jsonify({"result": email})
 
 ##로그인 데코레이터
+# @app.route("/create_event", methods=["GET"])
+# @jwt_required(optional=True)
+# def post_event():
+#     if check() is True:
+#         return jsonify({"result": "fail"})
+
+    
+#     email = get_jwt_identity()
+    
+#     # #return jsonify({"result": email})
+
+#     # #user_id = request.form["userId"]
+#     # restaurant_id = request.form["restaurantId"]
+#     # meeting_time = int(request.form["meetingTime"])
+#     # number_of_participants = request.form["numberOfParticipants"]
+
+#     # expire_time = datetime.datetime.now() + datetime.timedelta(minutes=meeting_time) 
+
+#     user = db.user.find_one({"email": email})
+#     user_name = user["fullname"]
+#     return jsonify({"res": user_name})
+
+#     # db.restaurant.update_one({"_id": ObjectId(restaurant_id)}, {"$set" : {"creator": email, "time": expire_time, "number_of_participants": number_of_participants, "participant_name": user_name, "gathering": "Y"}})
+
+#     # def event_expire():
+#     #     db.restaurant.findOneAndUpdate({"_id": ObjectId(restaurant_id)}, {"$unset" : {"creator" : "", "gathering" : "", "meeting_time" : "", "participants_name": "", "participants_number": ""}})
+
+#     # sched = BackgroundScheduler(daemon=True)
+#     # sched.add_job(event_expire, 'interval', minutes = meeting_time)
+#     # sched.start()
+
+#     # return jsonify({ "result" : "success"})
+######## 원본 create_event ####
+
 @app.route("/create_event", methods=["POST"])
 def post_event():
-    user_id = request.form["userId"]
-    restaurant_id = request.form["restaurantId"]
+    # user_id = request.form["userId"]
+    # email = g.token_info["email"]
+    # fullname = g.token_info["fullname"]
+    email = request.form["email"]
+    fullname = request.form["fullname"]
+    restaurant_name = request.form["restaurantName"]
     meeting_time = int(request.form["meetingTime"])
     number_of_participants = request.form["numberOfParticipants"]
 
-    expire_time = datetime.datetime.now() + datetime.timedelta(minutes=meeting_time) 
+    expire_time = datetime.now() + timedelta(minutes=meeting_time) 
 
-    user = db.user.find_one({"_id": ObjectId(user_id)})
+    expire_time_db = expire_time.strftime("%Y-%m-%d %H:%M")
+    
+
+
+
+    user = db.user.find_one({"email": email})
     user_name = user["fullname"]
 
-    db.restaurant.update_one({"_id": ObjectId(restaurant_id)}, {"$set" : {"creator": user_id, "time": expire_time, "number_of_participants": number_of_participants, "participant_name": user_name, "gathering": "Y"}})
+    ##########postman checking start##########
+    db.restaurant.update_one({"restaurant_name": restaurant_name}, {"$set" : {"creator": email, "meeting_time": expire_time_db, "participants_number": number_of_participants, "participants_name": email, "gathering": "Y"}})
 
     def event_expire():
-        db.restaurant.findOneAndUpdate({"_id": ObjectId(restaurant_id)}, {"$unset" : {"creator" : "", "gathering" : "", "meeting_time" : "", "participants_name": "", "participants_number": ""}})
+        db.restaurant.update_one({"restaurant_name": restaurant_name}, {"$unset" : {"creator" : "", "gathering" : "", "meeting_time" : "", "participants_name": "", "participants_number": ""}})
 
     sched = BackgroundScheduler(daemon=True)
     sched.add_job(event_expire, 'interval', minutes = meeting_time)
@@ -70,19 +128,26 @@ def post_event():
     return jsonify({ "result" : "success"})
 
 ##로그인 데코레이터
-@app.route("/join_event", methods=["POST"])
+@app.route("/join_event", methods=["GET, POST"])
+@jwt_required(optional=True)
 def join_event():
+    if check() is True:
+        return jsonify({"result": "fail"})
+    
+    if request.method == 'GET':
+        return True
+
+    else:
+        email = request.form["email"]
     ##
-    user_id = request.form["userId"]
-    ##
-    restaurant_id = request.form["restaurantId"]
+        restaurant_id = request.form["restaurantName"]
 
-    user_info = db.user.find_one({"_id" : ObjectId(user_id)})
-    user_name = user_info["fullname"]
+        user_info = db.user.find_one({"email" : email})
+        user_name = user_info["fullname"]
 
-    user = db.restaurant.update_one({"_id": restaurant_id}, {"$push": {"participant_name": user_name}})
+        user = db.restaurant.update_one({"_id": restaurant_id}, {"$push": {"participant_name": user_name}})
 
-    return jsonify({ "result" : "success"})
+        return jsonify({ "result" : "success"})
 
 ##로그인 데코레이터
 @app.route("/like", methods=["POST"])       ####join_event 데코레이터 오류나서 이름 바꾸겠습니다.
@@ -123,6 +188,10 @@ def main_listing():
     return render_template('index.html')
     #jsonify({ "result" : "success", "memo" : result })
 
+@app.route("/login_form")
+def login_form():
+    return render_template('login_form.html')
+
 
 
 @app.route("/signup", methods=["POST"])
@@ -157,17 +226,18 @@ def sign_in():
         ###
         access_token = create_access_token(identity=email, expires_delta=False)
 
-        resp = jsonify({"result": "success"})
+        resp = jsonify({"result": "success", "email": email })
 
         set_access_cookies(resp, access_token)
 
-        return resp, 200
+        #return resp, 200
+        return redirect(url_for('login_form'))
         
     else:
         return jsonify({ "result": "fail", "message": "INVALID_USER_INFO"}), 200
 
 
-@app.route("/gathering_check", methods=["GET"])
+@app.route("/api/gathering_check", methods=["GET"])
 @jwt_required(optional=True)
 def click_gather():
     current_identity = get_jwt_identity()
@@ -175,6 +245,42 @@ def click_gather():
         return jsonify({"result": "success"})
     else:
         return jsonify({"result": "fail"})
+
+@app.route("/participate_check", methods=["GET"])
+@jwt_required(optional=True)
+def click3_gather():
+    current_identity = get_jwt_identity()
+    if current_identity:
+        return jsonify({"result": "success"})
+    else:
+        return jsonify({"result": "fail"})
+
+@app.route("/like_check", methods=["GET"])
+@jwt_required(optional=True)
+def click4_gather():
+    current_identity = get_jwt_identity()
+    if current_identity:
+        return jsonify({"result": "success"})
+    else:
+        return jsonify({"result": "fail"})
+
+@app.route("/testing", methods=["GET"])
+@jwt_required(optional=True)
+def click2_gather():
+    email = get_jwt_identity()
+    return jsonify({"result": email})
+
+    
+@app.route('/token/remove', methods=['POST'])
+def logout():
+    # resp = jsonify({'logout': True})
+    resp = make_response(redirect('/'))
+    unset_jwt_cookies(resp)
+    return resp
+
+
+
+
 
 
 if __name__ == '__main__':

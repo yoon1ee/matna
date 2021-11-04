@@ -1,0 +1,40 @@
+.login-section {
+    position: absolute;
+    top:0;
+    right:0;
+    margin: 50px;
+}
+
+.button {
+    margin: 5px;
+}
+
+.columns {
+    margin: 0px 150px;
+}
+
+.fa-circle {
+    color: green;
+    margin-right: 10px;
+}
+
+.participants-status {
+    margin-left: 50px;
+}
+
+.gathering-time {
+    margin-left: 50px;
+}
+
+.dropdown {
+    margin-bottom: 180px;
+}
+
+.dropdown-content {
+    max-height: 10em;
+    overflow: auto;
+  }
+
+body {
+    background-color: #c0c0c0;
+}
